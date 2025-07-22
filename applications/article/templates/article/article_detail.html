@@ -794,7 +794,7 @@
 <div id="addReferenceModal" style="display:none; position:fixed; flex-direction: column; z-index:1050; left:0; top:0; width:100%; height:100%; overflow:auto; background-color:rgba(0,0,0,0.4);">
     <div style="background-color:#fefefe; margin:auto; padding:20px; border:1px solid #888; width:60%; max-width:600px; border-radius:5px;">
         <!-- <span onclick="closeAddReferenceModal()" style="color:#aaa; float:right; font-size:28px; font-weight:bold; cursor:pointer;">&times;</span> -->
-        <div style="display: flex; gap: 10px; align-items: center;margin-bottom: 10px;">
+        <div style="display: flex; gap: 10px; align-items: center;margin-bottom: 20px;">
             <h3 style="flex:1; margin: 0px;">Добавить новую ссылку</h3>
             <button onclick="closeAddReferenceModal()" type="button" class="modal-toggle-button" isnotchangabletext="">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -870,8 +870,8 @@
 {# *** МОДАЛЬНОЕ ОКНО ДЛЯ ДОБАВЛЕНИЯ НОВОЙ СЕКЦИИ *** #}
 <div id="addSectionModal" style="display:none; position:fixed; flex-direction: column; z-index:1050; left:0; top:0; width:100%; height:100%; overflow:auto; background-color:rgba(0,0,0,0.4);">
     <div style="background-color:#fefefe; margin:auto; padding:20px; border:1px solid #888; width:60%; max-width:600px; border-radius:5px;">
-        <div style="display: flex; gap: 10px; align-items: center;">
-            <h3 style="flex: 1;">Добавить новую секцию</h3>
+        <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 20px;">
+            <h3 style="flex: 1; margin: 0;">Добавить новую секцию</h3>
             <button onclick="closeAddSectionModal()" type="button" class="modal-toggle-button" isnotchangabletext="">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M6.4 19L5 17.6L10.6 12L5 6.4L6.4 5L12 10.6L17.6 5L19 6.4L13.4 12L19 17.6L17.6 19L12 13.4L6.4 19Z" fill="black"></path>
@@ -997,8 +997,7 @@ const addReferenceForm = document.getElementById('addReferenceForm');
 
 
 // Показываем/скрываем кнопку "Создать сегмент" при выделении текста
-// toDo : is closing when just clicking on display
-false && document.addEventListener('mouseup', function(event) {
+document.addEventListener('mouseup', function(event) {
     const selection = window.getSelection();
     if (selection.toString().trim().length > 5) { // Показываем кнопку, если выделено больше 5 символов
         // Проверяем, что выделение не внутри модального окна или textarea
