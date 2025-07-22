@@ -64,7 +64,8 @@
     }
 
     .content-list li, .reference-list li {
-        background-color: #f9f9f9;
+        background-color:var(--light-button-bg-color);
+        border: 1px solid var(--border-color);
         padding: 10px;
         margin-bottom: 8px;
         border-radius: 3px;
@@ -101,11 +102,27 @@
 
     /* ... стили для редактирования частей статьи ... */
     .section-editor {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
         margin-bottom: 15px;
         border-radius: var(--border-radius);
         padding: 10px;
-        border: 1px solid #f0f0f0;
-        background-color: #fdfdfd;
+        border: 1px solid var(--border-color);
+        background-color: var(--light-button-bg-color);
+    }
+
+    #display-title:empty{
+        display: none;
+    }
+
+    .section-editor h4 button{
+        margin-left: 10px;
+    }
+
+    .section-editor h4{
+        margin-bottom: 10px;
+        margin-top: 20px;
     }
 
     .section-editor:last-child{
@@ -122,20 +139,24 @@
     .section-display {
         padding: 5px 0;
     }
-    .edit-section-btn, .save-section-btn, .cancel-section-btn {
+    .edit-section-btn {
         font-size: 0.8em;
         padding: 4px 8px;
-        margin-left: 10px;
         cursor: pointer;
     }
-    .save-section-btn {
+
+    .section-editor{
+
+    }
+
+    /* .save-section-btn {
         background-color: #5cb85c;
         color: white;
-    }
-    .cancel-section-btn {
+    } */
+    /* .cancel-section-btn {
         background-color: #aaa;
         color: white;
-    }
+    } */
 
     .add-section-btn {
         /* display: block;
@@ -160,6 +181,11 @@
         margin-top: 10px;
     }
 
+    .reference-list .actions button, .section-editor .actions button{
+        font-size: 0.8em;
+        padding: 3px 6px;
+    }
+
     .section-editor h5{
         margin: 0;
         font-size: inherit;
@@ -179,7 +205,7 @@
 
     .segment-section-group-head{
         display: flex;
-        background-color: #f0f2f5;
+        background-color: var(--bg-color-pair-n);
         color: inherit;
         padding: 8px 12px;
         gap: 10px;
@@ -210,6 +236,12 @@
         border-radius: 4px;
         /* position: relative; Для позиционирования кнопок */
     }
+
+    .analyzed-segment-item .actions button{
+        font-size: 0.8em;
+        padding: 3px 6px;
+    }
+
     .analyzed-segment-item p {
         margin-top: 0;
         line-height: 1.6;
@@ -264,9 +296,10 @@
     
 </div>
 <div class="container">
-
-        <div class="article-page">
-            <div class="article-current-info article-page-column">
+    <div class="article-page">
+        <div class="article-current-info article-page-column" style="position: relative;">
+            <div class="scrollable-content" style="position: absolute; left: 0;top: 0;
+            border:none; padding: 0;">
                 {# *** НАЧАЛО: Добавление фиктивной формы с CSRF-токеном *** #}
                 <form style="display:none;">
                     {% csrf_token %}
@@ -309,460 +342,467 @@
                     <button onclick="deleteArticle('{{ article.id }}', this)" class="cancel-button">Удалить статью</button>
                 </div>
             </div>
-
-            <div class="article-other-info article-page-column">
-
-                <div class="tab-container">
-                    <div class="tab-buttons">
-                        <button class="tab-button" data-tab="available-content-and-raw-data">Доступный контент и сырые данные</button>
-                        <button class="tab-button" data-tab="automatically-linked-text-segments">Автоматически связанные сегменты текста</button>
-                        <button class="tab-button" data-tab="content-of-the-article-by-section">Содержимое статьи по секциям (редактируемое)</button>
-                        <button class="tab-button" data-tab="other-sections">Другие секции</button>
-                        <button class="tab-button" data-tab="structured-content-of-the-article">Структурированное содержимое статьи</button>
-                        <button class="tab-button" data-tab="clear-text-for-llm">Очищенный текст (для LLM)</button>
-                        <button class="tab-button" data-tab="list-of-references">Список литературы ({{ references_made|length }})</button>
-                    </div>
-
-                    <div class="tab-content" id="available-content-and-raw-data">
-                        {% if contents %}
-                                <h3>Доступный контент и сырые данные</h3>
-                                <div class="scrollable-content">
-                                    <ul class="content-list" style="padding-left:0; list-style:none;">
-                                        {% for content_item in contents %}
-                                        <li>
-                                            <strong>{{ content_item.source_api_name|upper }}</strong> - {{ content_item.format_type }}
-                                            <small>(Загружено: {{ content_item.retrieved_at|date:"d.m.Y H:i" }})</small>
-
-                                            {% if content_item.format_type == "link_openaccess_pdf" %}
-                                                <br><a href="{{ content_item.content }}" target="_blank" rel="noopener noreferrer">Ссылка на PDF</a>
-                                            {% else %}
-                                                <br><span class="raw-content-toggle" onclick="toggleRawContent(this, 'content-{{ content_item.id }}')">Показать/скрыть данные</span>
-                                                <div id="content-{{ content_item.id }}" class="raw-content-data">{% autoescape off %}{{ content_item.content }}{% endautoescape %}</div>
-                                            {% endif %}
-                                        </li>
-                                        {% endfor %}
-
-                                        {% if article.pdf_text %}
-                                            <li>
-                                                <strong>PDF</strong> - text
-                                                <small>(Загружено: {{ article.created_at|date:"d.m.Y H:i" }})</small>
-                                                <br><span class="raw-content-toggle" onclick="toggleRawContent(this, 'pdf-file-text-{{ article.id }}')">Показать/скрыть данные</span>
-                                                <div id="pdf-file-text-{{ article.id }}" class="raw-content-data">{% autoescape off %}{{ article.pdf_text }}{% endautoescape %}</div>
-                                            </li>
-                                        {% endif %}
-                                    </ul>
-                                </div>
-                        {% endif %}
-                    </div>
-                    <div class="tab-content" id="automatically-linked-text-segments">
-                        
-                        
-                        <h3>Автоматически связанные сегменты текста</h3>
-                        <div class="scrollable-content">
-                            {# === НОВЫЙ БЛОК ДЛЯ ОТОБРАЖЕНИЯ СЕГМЕНТОВ === #}
-                            <div class="detail-section analyzed-segments-wrapper">
-                                
-                                {% if analyzed_segments %}
-                                    {# Группируем сегменты по названию секции #}
-                                    {% regroup analyzed_segments by section_key as segments_by_section %}
-
-                                    {% for section in segments_by_section %}
-                                        <div class="segment-section-group">
-                                            <button class="segment-section-group-head" onclick="handleSegmentToggle({tab: `{{section.grouper}}`, parentClass: '.segment-section-group', listClass:'.analyzed-segment-list', root:'.analyzed-segments-wrapper'})">
-                                                <h4>Секция: {{ section.grouper|default:"(Без секции)" }}</h4>
-                                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M2.93154 10.8426L7.61654 6.23165C7.71876 6.13052 7.85675 6.07379 8.00054 6.07379C8.14433 6.07379 8.28232 6.13052 8.38454 6.23165L13.0695 10.8416C13.1724 10.9427 13.3108 10.9994 13.455 10.9994C13.5992 10.9994 13.7377 10.9427 13.8405 10.8416C13.8912 10.7923 13.9314 10.7333 13.9589 10.6681C13.9864 10.6029 14.0006 10.5329 14.0006 10.4621C14.0006 10.3914 13.9864 10.3214 13.9589 10.2562C13.9314 10.191 13.8912 10.132 13.8405 10.0826L9.15654 5.47265C8.84802 5.16972 8.43292 5 8.00054 5C7.56816 5 7.15306 5.16972 6.84454 5.47265L2.16054 10.0826C2.10974 10.132 2.06936 10.1911 2.04178 10.2564C2.01421 10.3217 2 10.3918 2 10.4626C2 10.5335 2.01421 10.6036 2.04178 10.6689C2.06936 10.7342 2.10974 10.7933 2.16054 10.8426C2.2634 10.9437 2.40183 11.0004 2.54604 11.0004C2.69025 11.0004 2.82869 10.9437 2.93154 10.8426Z" fill="black"/>
-                                                </svg>
-
-                                            </button>
-                                            <div class="analyzed-segment-list">
-                                            {% for segment in section.list %}
-                                                <div class="analyzed-segment-item" id="segment-{{ segment.pk }}">
-                                                    {# Текст сегмента (абзаца) #}
-                                                    <p>{{ segment.segment_text|linebreaksbr }}</p>
-
-                                                    {# Отображение связанных ссылок #}
-                                                    {% if segment.cited_references.all %}
-                                                        <strong>Связанные источники:</strong>
-                                                        <ul class="segment-references-list">
-                                                        {% comment %} {% for ref_link in segment.cited_references.all %} {% endcomment %}
-                                                        {% for ref_link in segment.cited_references.all|dictsort:"manual_data_json.jats_ref_id" %}
-                                                            <li>
-                                                                <span style="font-weight: bold; color: #0056b3;">
-                                                                    {% if ref_link.manual_data_json.jats_ref_id %}
-                                                                        [{{ ref_link.manual_data_json.jats_ref_id }}]
-                                                                    {% endif %}
-                                                                </span>
-                                                                {% if ref_link.resolved_article %}
-                                                                    <a href="{% url 'article_detail' ref_link.resolved_article.pk %}" title="{{ ref_link.resolved_article.title }}" 
-                                                                    style={% if not ref_link.resolved_article.cleaned_text_for_llm and not ref_link.resolved_article.pdf_text %}color:#d9534f;{% else %}color:#0056b3;{% endif %}
-                                                                    >{{ ref_link.resolved_article.title|truncatechars:80 }}</a>
-                                                                {% elif ref_link.manual_data_json.title %}
-                                                                    {{ ref_link.manual_data_json.title|truncatechars:80 }}
-                                                                {% else %}
-                                                                    {{ ref_link.raw_reference_text|truncatechars:80 }}
-                                                                {% endif %}
-                                                                {% if ref_link.target_article_doi %}
-                                                                    <small> (DOI: {{ ref_link.target_article_doi }})</small>
-                                                                {% endif %}
-                                                            </li>
-                                                        {% endfor %}
-                                                        </ul>
-                                                    {% else %}
-                                                        <p><small><i>В этом сегменте не найдено связанных ссылок.</i></small></p>
-                                                    {% endif %}
-
-                                                    <div id="llm-analysis-results-{{ segment.pk }}" style="margin-top: 10px; padding: 8px; background-color: #f0f8ff; border-radius: 3px;">
-                                                        <strong>LLM Анализ:</strong>
-                                                        {% if segment.llm_analysis_notes %}
-                                                            <p><i>Заметки:</i> {{ segment.llm_analysis_notes|linebreaksbr }}</p>
-                                                            <p><i>Оценка достоверности (1-5):</i> {{ segment.llm_veracity_score|default:"не оценено" }}</p>
-                                                            <p><small>Модель: {{ segment.llm_model_name|default:"не указана" }} ({{ segment.updated_at|date:"d.m.Y H:i" }})</small></p>
-                                                        {% else %}
-                                                            <p>Анализ еще не проводился или в процессе.</p>
-                                                        {% endif %}
-                                                    </div>
-
-                                                    <div class="actions" style="margin-top: 10px;">
-                                                        <button class="llm-analyze-segment-btn" data-segment-id="{{ segment.pk }}">Анализировать с LLM</button>
-                                                        <button disabled title="Действие пока не реализовано">Редактировать</button>
-                                                        <button disabled title="Действие пока не реализовано" style="background-color:#d9534f; color:white;">Удалить</button>
-                                                    </div>
-                                                </div>
-                                            {% endfor %}
-                                            </div>
-                                        </div>
-                                    {% endfor %}
-                                {% else %}
-                                    <p>Для этой статьи еще не создано анализируемых сегментов. Если вы загрузили полный текст в XML-формате, задача по их созданию может быть еще в очереди на выполнение.</p>
-                                {% endif %}
-                            </div>
-                        </div>
-                         {# === КНОПКА СОЗДАНИЯ СЕГМЕНТА (появляется при выделении текста) === #}
-                        <button type="button" class="primary-button" id="createSegmentBtn">Создать сегмент из выделенного</button>
-                    </div>
-                    <div class="tab-content" id="content-of-the-article-by-section">
-                        <h3>Содержимое статьи по секциям (редактируемое)</h3>
-                        <div class="scrollable-content">
-                            {% with standard_sections="title,abstract,introduction,methods,results,discussion,conclusion"|split:"," %}
-                                {% for section_key in standard_sections %}
-                                    <div class="section-editor" id="section-{{ section_key }}">
-                                        <h4>
-                                            {{ section_key|capfirst }}
-                                            <button type="button" class="edit-section-btn" data-section="{{ section_key }}">Редактировать</button>
-                                        </h4>
-                                        <div class="section-display" id="display-{{ section_key }}">
-                                            {{ article.structured_content|json_script:"initial-structured-content-data" }}
-                                        </div>
-                                        <div class="section-form" id="form-{{ section_key }}" style="display:none;">
-                                            <textarea id="textarea-{{ section_key }}">
-                                                {{ article.structured_content|get_item:section_key|default:"" }}
-                                            </textarea>
-                                            <button type="button" class="save-section-btn" data-section="{{ section_key }}">Сохранить</button>
-                                            <button type="button" class="cancel-section-btn" data-section="{{ section_key }}">Отмена</button>
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            {% endwith %}
-
-                            {% if article.structured_content.full_body_fallback and not article.structured_content.introduction %}
-                                {# Показываем fallback, если нет основных секций #}
-                                <h4>Основной текст (без явных разделов):</h4>
-                                <div class="section-editor">
-                                    <p>{{ article.structured_content.full_body_fallback|linebreaksbr }}</p>
-                                    {# Здесь тоже можно добавить редактирование #}
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="tab-content" id="other-sections">
-                            
-
-                            {% if article.structured_content.other_sections %}
-                                <h3>Другие секции:</h3>
-                                <div class="scrollable-content">
-                                {% for other_sec in article.structured_content.other_sections %}
-                                    
-                                    {# Добавляем ID к обертке секции для легкого удаления из DOM #}
-                                    <div class="section-editor" id="custom-section-{{ forloop.counter0 }}">
-                                        <h5>{{ other_sec.title|default:"Без заголовка" }}</h5>
-                                        <div class="section-display">
-                                            {{ other_sec.text|default:"(Текст отсутствует)"|linebreaksbr }}
-                                        </div>
-                                        {# TODO: Здесь можно будет добавить и кнопку "Редактировать" для этих секций позже #}
-                                        <button type="button" class="delete-custom-section-btn"
-                                                data-section-index="{{ forloop.counter0 }}"
-                                                data-section-title="{{ other_sec.title|default_if_none:''|escapejs }}"
-                                                style="background-color:#d9534f; color:white; font-size:0.8em; padding:3px 6px; margin-top:10px;">
-                                            Удалить эту секцию
-                                        </button>
-                                    </div>
-                                {% endfor %}
-                                </div>
-                            {% endif %}
-
-                            <button type="button"  id="openAddSectionModalBtn">Добавить свою секцию</button>
-                    </div>
-                    <div class="tab-content" id="structured-content-of-the-article">
-                        {% if article.structured_content %}
-
-                                <h3>Структурированное содержимое статьи</h3>
-
-                                <div class="scrollable-content" style="padding: 0px 20px;">
-
-                                    {% if article.structured_content.title %}
-                                        <h4>{{ article.structured_content.title }}</h4>
-                                    {% endif %}
-
-                                    {% if article.structured_content.abstract %}
-                                        <div class="content-section">
-                                            <h5>Abstract (Аннотация)</h5>
-                                            <p>{{ article.structured_content.abstract|linebreaksbr }}</p>
-                                        </div>
-                                    {% endif %}
-
-                                    {% if article.structured_content.introduction %}
-                                        <div class="content-section">
-                                            <h5>Introduction (Введение)</h5>
-                                            <p>{{ article.structured_content.introduction|linebreaksbr }}</p>
-                                        </div>
-                                    {% endif %}
-
-                                    {% if article.structured_content.methods %}
-                                        <div class="content-section">
-                                            <h5>Methods (Методы)</h5>
-                                            <p>{{ article.structured_content.methods|linebreaksbr }}</p>
-                                        </div>
-                                    {% endif %}
-
-                                    {% if article.structured_content.results %}
-                                        <div class="content-section">
-                                            <h5>Results (Результаты)</h5>
-                                            <p>{{ article.structured_content.results|linebreaksbr }}</p>
-                                        </div>
-                                    {% endif %}
-
-                                    {% if article.structured_content.discussion %}
-                                        <div class="content-section">
-                                            <h5>Discussion (Обсуждение)</h5>
-                                            <p>{{ article.structured_content.discussion|linebreaksbr }}</p>
-                                        </div>
-                                    {% endif %}
-
-                                    {% if article.structured_content.other_sections %}
-                                        {% for sec in article.structured_content.other_sections %}
-                                            <div class="content-section">
-                                                <h5>{{ sec.title|default:"Дополнительная секция" }}</h5>
-                                                <p>{{ sec.text|linebreaksbr }}</p>
-                                            </div>
-                                        {% endfor %}
-                                    {% endif %}
-
-                                    {% if article.structured_content.conclusion %}
-                                        <div class="content-section">
-                                            <h5>Conclusion (Заключение)</h5>
-                                            <p>{{ article.structured_content.conclusion|linebreaksbr }}</p>
-                                        </div>
-                                    {% endif %}
-
-                                    {% if not article.structured_content.introduction and not article.structured_content.methods and article.structured_content.full_body_fallback %}
-                                        <div class="content-section">
-                                            <h5>Основной текст (без разделов)</h5>
-                                            <p>{{ article.structured_content.full_body_fallback|linebreaksbr }}</p>
-                                        </div>
-                                    {% endif %}
-                                </div>
-
-                        {% endif %}
-                    </div>
-                    <div class="tab-content" id="clear-text-for-llm">
-                        {% if article.cleaned_text_for_llm %}
-
-                                <h3>Очищенный текст (для LLM)</h3>
-                                <div class="scrollable-content">
-                                    {{ article.cleaned_text_for_llm|linebreaksbr }}
-                                </div>
-
-                        {% endif %}
-                    </div>
-                    <div class="tab-content" id="list-of-references">
-                        {% if references_made %}
-
-                                <h3>Список литературы ({{ references_made|length }} ссылок)</h3>
-                                <div class="actions">
-                                    <button onclick="findAllReferenceDois({{ article.id }}, this)">Найти DOI для всех ненайденных</button>
-                                    <button onclick="loadAllLinkedReferences({{ article.id }}, this)">Загрузить все с DOI</button>
-                                    <button type="button" class="add-section-btn stroked-button" onclick="openAddReferenceModal()">Добавить ссылку вручную</button>
-                                </div>
-
-                                <div class="scrollable-content">
-                                <ul class="reference-list" style="padding-left:0; list-style:none;">
-                                    {% for ref in references_made %}
-                                        <li>
-                                            <p>
-                                                {% if ref.manual_data_json.title %}
-                                                    Ссылка #{{ forloop.counter }}: <strong>{{ ref.manual_data_json.title }}</strong><br>
-                                                {% endif %}
-
-                                                {% if ref.raw_reference_text %}
-                                                    {{ ref.raw_reference_text|truncatechars:200 }}<br>
-                                                {% endif %}
-
-                                                {% if ref.manual_data_json.year %}
-                                                    (Год: {{ ref.manual_data_json.year }})
-                                                {% endif %}
-                                            </p>
-
-                                            <p>
-                                                <strong>Целевой DOI:</strong> {{ ref.target_article_doi|default:"Не найден" }} <br>
-                                                <strong>PubMed ID:</strong> {{ ref.resolved_article.pubmed_id|default:"Не найден" }} <br>
-                                                <strong>PubMed Central ID (PMC):</strong> {{ ref.resolved_article.pmc_id|default:"Не найден" }} <br>
-                                                {% if ref.resolved_article.pdf_file %}
-                                                    <strong>PDF:</strong><a href="{{ ref.resolved_article.pdf_file.url }}" target="_blank"> Открыть PDF файл статьи</a>
-                                                {% else %}
-                                                    <strong>PDF:</strong> Нет PDF файла статьи
-                                                {% endif %}
-
-                                                <br>
-
-                                                {% if ref.resolved_article %}
-                                                    <strong>Статус в БД:</strong> Связана со статьей <a href="{% url 'article_detail' ref.resolved_article.pk %}">"{{ ref.resolved_article.title|truncatechars:50 }}"</a>
-                                                {% else %}
-                                                    <strong>Статус в БД:</strong> Не связана с локальной статьей
-                                                {% endif %}
-                                            </p>
-
-                                            <span class="status">Статус обработки ссылки: {{ ref.get_status_display }}</span>
-
-                                            <div class="actions">
-                                                {% if not ref.target_article_doi and ref.status != "doi_lookup_in_progress" %}
-                                                    {# Не показывать кнопку, если уже в поиске #}
-                                                    <button onclick="findDoiForReference({{ ref.id }}, this)">Найти DOI</button>
-                                                {% elif ref.status == "doi_lookup_in_progress" %}
-                                                    <button disabled>Поиск DOI...</button>
-                                                {% else %}
-                                                    <button disabled title="DOI уже найден или указан">Найти DOI</button>
-                                                {% endif %}
-
-                                                {% if ref.target_article_doi and not ref.resolved_article and ref.status != "article_fetch_in_progress" %}
-                                                    <button onclick="loadReferencedArticle({{ ref.id }}, this)">Загрузить по DOI</button>
-                                                {% elif ref.status == "article_fetch_in_progress" %}
-                                                    <button disabled>Загрузка статьи...</button>
-                                                {% else %}
-                                                    <button disabled title="Нет DOI или статья уже загружена/связана">Загрузить по DOI</button>
-                                                {% endif %}
-
-                                                <button onclick="openEditModal({{ ref.id }}, '{{ ref.raw_reference_text|escapejs }}', '{{ ref.target_article_doi|default_if_none:""|escapejs }}', '{{ ref.manual_data_json.title|default_if_none:""|escapejs }}', '{{ ref.manual_data_json.year|default_if_none:""|escapejs }}', '{{ ref.status|escapejs }}', '{{ ref.get_status_display|escapejs }}')">Редактировать</button>
-
-                                                <button onclick="deleteReference({{ ref.id }}, this)" style="background-color: #d9534f; color:white;">Удалить</button>
-                                            </div>
-                                        </li>
-                                    {% endfor %}
-                                </ul>
-                                </div>
-                        {% endif %}
-                    </div>
-
-                </div>
-
-               
-
-               
-
-              
-
-                {% comment %} {% if article.abstract %}
-                <div class="detail-section abstract">
-                    <h3>Аннотация</h3>
-                    <p>{{ article.abstract|linebreaksbr }}</p>
-                </div>
-                {% endif %} {% endcomment %}
-
-                {% comment %} {% if article.structured_content %}
-                    <div class="detail-section structured-text">
-                        <h3>Структурированное содержимое статьи</h3>
-                        {% if article.structured_content.title %}
-                            <h4>{{ article.structured_content.title }}</h4>
-                        {% endif %}
-
-                        {% if article.structured_content.abstract %}
-                            <div class="content-section">
-                                <h5>Abstract (Аннотация)</h5>
-                                <p>{{ article.structured_content.abstract|linebreaksbr }}</p>
-                            </div>
-                        {% endif %}
-
-                        {% if article.structured_content.introduction %}
-                            <div class="content-section">
-                                <h5>Introduction (Введение)</h5>
-                                <p>{{ article.structured_content.introduction|linebreaksbr }}</p>
-                            </div>
-                        {% endif %}
-
-                        {% if article.structured_content.methods %}
-                            <div class="content-section">
-                                <h5>Methods (Методы)</h5>
-                                <p>{{ article.structured_content.methods|linebreaksbr }}</p>
-                            </div>
-                        {% endif %}
-
-                        {% if article.structured_content.results %}
-                            <div class="content-section">
-                                <h5>Results (Результаты)</h5>
-                                <p>{{ article.structured_content.results|linebreaksbr }}</p>
-                            </div>
-                        {% endif %}
-
-                        {% if article.structured_content.discussion %}
-                            <div class="content-section">
-                                <h5>Discussion (Обсуждение)</h5>
-                                <p>{{ article.structured_content.discussion|linebreaksbr }}</p>
-                            </div>
-                        {% endif %}
-
-                        {% if article.structured_content.other_sections %}
-                            {% for sec in article.structured_content.other_sections %}
-                                <div class="content-section">
-                                    <h5>{{ sec.title|default:"Дополнительная секция" }}</h5>
-                                    <p>{{ sec.text|linebreaksbr }}</p>
-                                </div>
-                            {% endfor %}
-                        {% endif %}
-
-                        {% if article.structured_content.conclusion %}
-                            <div class="content-section">
-                                <h5>Conclusion (Заключение)</h5>
-                                <p>{{ article.structured_content.conclusion|linebreaksbr }}</p>
-                            </div>
-                        {% endif %}
-
-                        {% if not article.structured_content.introduction and not article.structured_content.methods and article.structured_content.full_body_fallback %}
-                            <div class="content-section">
-                                <h5>Основной текст (без разделов)</h5>
-                                <p>{{ article.structured_content.full_body_fallback|linebreaksbr }}</p>
-                            </div>
-                        {% endif %}
-                    </div>
-                {% endif %} {% endcomment %}
-
-                
-
-
-
-               
-
-               
-            </div>
         </div>
 
+        <div class="article-other-info article-page-column">
+
+            <div class="tab-container">
+                <div class="tab-buttons">
+                    <button class="tab-button" data-tab="available-content-and-raw-data">Доступный контент и сырые данные</button>
+                    <button class="tab-button" data-tab="automatically-linked-text-segments">Автоматически связанные сегменты текста</button>
+                    <button class="tab-button" data-tab="content-of-the-article-by-section">Содержимое статьи по секциям (редактируемое)</button>
+                    <button class="tab-button" data-tab="other-sections">Другие секции</button>
+                    <button class="tab-button" data-tab="structured-content-of-the-article">Структурированное содержимое статьи</button>
+                    <button class="tab-button" data-tab="clear-text-for-llm">Очищенный текст (для LLM)</button>
+                    <button class="tab-button" data-tab="list-of-references">Список литературы ({{ references_made|length }})</button>
+                </div>
+
+                <div class="tab-content" id="available-content-and-raw-data">
+                    {% if contents %}
+                            <h3>Доступный контент и сырые данные</h3>
+                            <div class="scrollable-content">
+                                <ul class="content-list" style="padding-left:0; list-style:none;">
+                                    {% for content_item in contents %}
+                                    <li>
+                                        <strong>{{ content_item.source_api_name|upper }}</strong> - {{ content_item.format_type }}
+                                        <small>(Загружено: {{ content_item.retrieved_at|date:"d.m.Y H:i" }})</small>
+
+                                        {% if content_item.format_type == "link_openaccess_pdf" %}
+                                            <br><a href="{{ content_item.content }}" target="_blank" rel="noopener noreferrer">Ссылка на PDF</a>
+                                        {% else %}
+                                            <br><span class="raw-content-toggle" onclick="toggleRawContent(this, 'content-{{ content_item.id }}')">Показать/скрыть данные</span>
+                                            <div id="content-{{ content_item.id }}" class="raw-content-data">{% autoescape off %}{{ content_item.content }}{% endautoescape %}</div>
+                                        {% endif %}
+                                    </li>
+                                    {% endfor %}
+
+                                    {% if article.pdf_text %}
+                                        <li>
+                                            <strong>PDF</strong> - text
+                                            <small>(Загружено: {{ article.created_at|date:"d.m.Y H:i" }})</small>
+                                            <br><span class="raw-content-toggle" onclick="toggleRawContent(this, 'pdf-file-text-{{ article.id }}')">Показать/скрыть данные</span>
+                                            <div id="pdf-file-text-{{ article.id }}" class="raw-content-data">{% autoescape off %}{{ article.pdf_text }}{% endautoescape %}</div>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                    {% endif %}
+                </div>
+                <div class="tab-content" id="automatically-linked-text-segments">
+                    
+                    
+                    <h3>Автоматически связанные сегменты текста</h3>
+                    <div class="scrollable-content">
+                        {# === НОВЫЙ БЛОК ДЛЯ ОТОБРАЖЕНИЯ СЕГМЕНТОВ === #}
+                        <div class="detail-section analyzed-segments-wrapper">
+                            
+                            {% if analyzed_segments %}
+                                {# Группируем сегменты по названию секции #}
+                                {% regroup analyzed_segments by section_key as segments_by_section %}
+
+                                {% for section in segments_by_section %}
+                                    <div class="segment-section-group">
+                                        <button class="segment-section-group-head" onclick="handleSegmentToggle({tab: `{{section.grouper}}`, parentClass: '.segment-section-group', listClass:'.analyzed-segment-list', root:'.analyzed-segments-wrapper'})">
+                                            <h4>Секция: {{ section.grouper|default:"(Без секции)" }}</h4>
+                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M2.93154 10.8426L7.61654 6.23165C7.71876 6.13052 7.85675 6.07379 8.00054 6.07379C8.14433 6.07379 8.28232 6.13052 8.38454 6.23165L13.0695 10.8416C13.1724 10.9427 13.3108 10.9994 13.455 10.9994C13.5992 10.9994 13.7377 10.9427 13.8405 10.8416C13.8912 10.7923 13.9314 10.7333 13.9589 10.6681C13.9864 10.6029 14.0006 10.5329 14.0006 10.4621C14.0006 10.3914 13.9864 10.3214 13.9589 10.2562C13.9314 10.191 13.8912 10.132 13.8405 10.0826L9.15654 5.47265C8.84802 5.16972 8.43292 5 8.00054 5C7.56816 5 7.15306 5.16972 6.84454 5.47265L2.16054 10.0826C2.10974 10.132 2.06936 10.1911 2.04178 10.2564C2.01421 10.3217 2 10.3918 2 10.4626C2 10.5335 2.01421 10.6036 2.04178 10.6689C2.06936 10.7342 2.10974 10.7933 2.16054 10.8426C2.2634 10.9437 2.40183 11.0004 2.54604 11.0004C2.69025 11.0004 2.82869 10.9437 2.93154 10.8426Z" fill="black"/>
+                                            </svg>
+
+                                        </button>
+                                        <div class="analyzed-segment-list">
+                                        {% for segment in section.list %}
+                                            <div class="analyzed-segment-item" id="segment-{{ segment.pk }}">
+                                                {# Текст сегмента (абзаца) #}
+                                                <p>{{ segment.segment_text|linebreaksbr }}</p>
+
+                                                {# Отображение связанных ссылок #}
+                                                {% if segment.cited_references.all %}
+                                                    <strong>Связанные источники:</strong>
+                                                    <ul class="segment-references-list">
+                                                    {% comment %} {% for ref_link in segment.cited_references.all %} {% endcomment %}
+                                                    {% for ref_link in segment.cited_references.all|dictsort:"manual_data_json.jats_ref_id" %}
+                                                        <li>
+                                                            <span style="font-weight: bold; color: #0056b3;">
+                                                                {% if ref_link.manual_data_json.jats_ref_id %}
+                                                                    [{{ ref_link.manual_data_json.jats_ref_id }}]
+                                                                {% endif %}
+                                                            </span>
+                                                            {% if ref_link.resolved_article %}
+                                                                <a href="{% url 'article_detail' ref_link.resolved_article.pk %}" title="{{ ref_link.resolved_article.title }}" 
+                                                                style={% if not ref_link.resolved_article.cleaned_text_for_llm and not ref_link.resolved_article.pdf_text %}color:#d9534f;{% else %}color:#0056b3;{% endif %}
+                                                                >{{ ref_link.resolved_article.title|truncatechars:80 }}</a>
+                                                            {% elif ref_link.manual_data_json.title %}
+                                                                {{ ref_link.manual_data_json.title|truncatechars:80 }}
+                                                            {% else %}
+                                                                {{ ref_link.raw_reference_text|truncatechars:80 }}
+                                                            {% endif %}
+                                                            {% if ref_link.target_article_doi %}
+                                                                <small> (DOI: {{ ref_link.target_article_doi }})</small>
+                                                            {% endif %}
+                                                        </li>
+                                                    {% endfor %}
+                                                    </ul>
+                                                {% else %}
+                                                    <p><small><i>В этом сегменте не найдено связанных ссылок.</i></small></p>
+                                                {% endif %}
+
+                                                <div id="llm-analysis-results-{{ segment.pk }}" style="margin-top: 10px; padding: 8px; background-color: #f0f8ff; border-radius: 3px;">
+                                                    <strong>LLM Анализ:</strong>
+                                                    {% if segment.llm_analysis_notes %}
+                                                        <p><i>Заметки:</i> {{ segment.llm_analysis_notes|linebreaksbr }}</p>
+                                                        <p><i>Оценка достоверности (1-5):</i> {{ segment.llm_veracity_score|default:"не оценено" }}</p>
+                                                        <p><small>Модель: {{ segment.llm_model_name|default:"не указана" }} ({{ segment.updated_at|date:"d.m.Y H:i" }})</small></p>
+                                                    {% else %}
+                                                        <p>Анализ еще не проводился или в процессе.</p>
+                                                    {% endif %}
+                                                </div>
+
+                                                <div class="actions" style="margin-top: 10px;">
+                                                    <button class="llm-analyze-segment-btn" data-segment-id="{{ segment.pk }}">Анализировать с LLM</button>
+                                                    <button disabled title="Действие пока не реализовано">Редактировать</button>
+                                                    <button disabled title="Действие пока не реализовано" style="background-color:#d9534f; color:white;">Удалить</button>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <p>Для этой статьи еще не создано анализируемых сегментов. Если вы загрузили полный текст в XML-формате, задача по их созданию может быть еще в очереди на выполнение.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                        {# === КНОПКА СОЗДАНИЯ СЕГМЕНТА (появляется при выделении текста) === #}
+                    <button type="button" class="primary-button" id="createSegmentBtn">Создать сегмент из выделенного</button>
+                </div>
+                <div class="tab-content" id="content-of-the-article-by-section">
+                    <h3>Содержимое статьи по секциям (редактируемое)</h3>
+                    <div class="scrollable-content">
+                        {% with standard_sections="title,abstract,introduction,methods,results,discussion,conclusion"|split:"," %}
+                            {% for section_key in standard_sections %}
+                                <div class="section-editor" id="section-{{ section_key }}">
+                                    <h4>
+                                        {{ section_key|capfirst }}
+                                        <button type="button" class="edit-section-btn" data-section="{{ section_key }}">Редактировать</button>
+                                    </h4>
+                                    <div class="section-display" id="display-{{ section_key }}">{{ article.structured_content|json_script:"initial-structured-content-data" }}</div>
+                                    <div class="section-form" id="form-{{ section_key }}" style="display:none;">
+                                        <textarea id="textarea-{{ section_key }}">
+                                            {{ article.structured_content|get_item:section_key|default:"" }}
+                                        </textarea>
+                                        <div class="actions">
+                                            <button type="button" class="save-section-btn" data-section="{{ section_key }}">Сохранить</button>
+                                            <button type="button" class="cancel-button cancel-section-btn" data-section="{{ section_key }}">Отмена</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% endwith %}
+
+                        {% if article.structured_content.full_body_fallback and not article.structured_content.introduction %}
+                            {# Показываем fallback, если нет основных секций #}
+                            <h4>Основной текст (без явных разделов):</h4>
+                            <div class="section-editor">
+                                <p>{{ article.structured_content.full_body_fallback|linebreaksbr }}</p>
+                                {# Здесь тоже можно добавить редактирование #}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="tab-content" id="other-sections">
+                        
+
+                        {% if article.structured_content.other_sections %}
+                            <h3>Другие секции:</h3>
+                            <div class="scrollable-content">
+                            {% for other_sec in article.structured_content.other_sections %}
+                                
+                                {# Добавляем ID к обертке секции для легкого удаления из DOM #}
+                                <div class="section-editor" id="custom-section-{{ forloop.counter0 }}">
+                                    <h5>{{ other_sec.title|default:"Без заголовка" }}</h5>
+                                    <div class="section-display">
+                                        {{ other_sec.text|default:"(Текст отсутствует)"|linebreaksbr }}
+                                    </div>
+                                    {# TODO: Здесь можно будет добавить и кнопку "Редактировать" для этих секций позже #}
+                                    <button type="button" class="delete-custom-section-btn"
+                                            data-section-index="{{ forloop.counter0 }}"
+                                            data-section-title="{{ other_sec.title|default_if_none:''|escapejs }}"
+                                            style="background-color:#d9534f; color:white; font-size:0.8em; padding:3px 6px; margin-top:10px;">
+                                        Удалить эту секцию
+                                    </button>
+                                </div>
+                            {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <button type="button"  id="openAddSectionModalBtn">Добавить свою секцию</button>
+                </div>
+                <div class="tab-content" id="structured-content-of-the-article">
+                    {% if article.structured_content %}
+
+                            <h3>Структурированное содержимое статьи</h3>
+
+                            <div class="scrollable-content" style="padding: 20px 20px 0;">
+
+                                {% if article.structured_content.title %}
+                                    <h4>{{ article.structured_content.title }}</h4>
+                                {% endif %}
+
+                                {% if article.structured_content.abstract %}
+                                    <div class="content-section">
+                                        <h5>Abstract (Аннотация)</h5>
+                                        <p>{{ article.structured_content.abstract|linebreaksbr }}</p>
+                                    </div>
+                                {% endif %}
+
+                                {% if article.structured_content.introduction %}
+                                    <div class="content-section">
+                                        <h5>Introduction (Введение)</h5>
+                                        <p>{{ article.structured_content.introduction|linebreaksbr }}</p>
+                                    </div>
+                                {% endif %}
+
+                                {% if article.structured_content.methods %}
+                                    <div class="content-section">
+                                        <h5>Methods (Методы)</h5>
+                                        <p>{{ article.structured_content.methods|linebreaksbr }}</p>
+                                    </div>
+                                {% endif %}
+
+                                {% if article.structured_content.results %}
+                                    <div class="content-section">
+                                        <h5>Results (Результаты)</h5>
+                                        <p>{{ article.structured_content.results|linebreaksbr }}</p>
+                                    </div>
+                                {% endif %}
+
+                                {% if article.structured_content.discussion %}
+                                    <div class="content-section">
+                                        <h5>Discussion (Обсуждение)</h5>
+                                        <p>{{ article.structured_content.discussion|linebreaksbr }}</p>
+                                    </div>
+                                {% endif %}
+
+                                {% if article.structured_content.other_sections %}
+                                    {% for sec in article.structured_content.other_sections %}
+                                        <div class="content-section">
+                                            <h5>{{ sec.title|default:"Дополнительная секция" }}</h5>
+                                            <p>{{ sec.text|linebreaksbr }}</p>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+
+                                {% if article.structured_content.conclusion %}
+                                    <div class="content-section">
+                                        <h5>Conclusion (Заключение)</h5>
+                                        <p>{{ article.structured_content.conclusion|linebreaksbr }}</p>
+                                    </div>
+                                {% endif %}
+
+                                {% if not article.structured_content.introduction and not article.structured_content.methods and article.structured_content.full_body_fallback %}
+                                    <div class="content-section">
+                                        <h5>Основной текст (без разделов)</h5>
+                                        <p>{{ article.structured_content.full_body_fallback|linebreaksbr }}</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                    {% endif %}
+                </div>
+                <div class="tab-content" id="clear-text-for-llm">
+                    {% if article.cleaned_text_for_llm %}
+
+                            <h3>Очищенный текст (для LLM)</h3>
+                            <div class="scrollable-content">
+                                {{ article.cleaned_text_for_llm|linebreaksbr }}
+                            </div>
+
+                    {% endif %}
+                </div>
+                <div class="tab-content" id="list-of-references">
+                    {% if references_made %}
+
+                            <h3>Список литературы ({{ references_made|length }} ссылок)</h3>
+                            <div class="actions">
+                                <button onclick="findAllReferenceDois('{{ article.id }}', this)">Найти DOI для всех ненайденных</button>
+                                <button onclick="loadAllLinkedReferences('{{ article.id }}', this)">Загрузить все с DOI</button>
+                                <button type="button" class="add-section-btn stroked-button" onclick="openAddReferenceModal()">Добавить ссылку вручную</button>
+                            </div>
+
+                            <div class="scrollable-content">
+                            <ul class="reference-list" style="padding-left:0; list-style:none;">
+                                {% for ref in references_made %}
+                                    <li>
+                                        <p>
+                                            {% if ref.manual_data_json.title %}
+                                                Ссылка #{{ forloop.counter }}: <strong>{{ ref.manual_data_json.title }}</strong><br>
+                                            {% endif %}
+
+                                            {% if ref.raw_reference_text %}
+                                                {{ ref.raw_reference_text|truncatechars:200 }}<br>
+                                            {% endif %}
+
+                                            {% if ref.manual_data_json.year %}
+                                                (Год: {{ ref.manual_data_json.year }})
+                                            {% endif %}
+                                        </p>
+
+                                        <p>
+                                            <strong>Целевой DOI:</strong> {{ ref.target_article_doi|default:"Не найден" }} <br>
+                                            <strong>PubMed ID:</strong> {{ ref.resolved_article.pubmed_id|default:"Не найден" }} <br>
+                                            <strong>PubMed Central ID (PMC):</strong> {{ ref.resolved_article.pmc_id|default:"Не найден" }} <br>
+                                            {% if ref.resolved_article.pdf_file %}
+                                                <strong>PDF:</strong><a href="{{ ref.resolved_article.pdf_file.url }}" target="_blank"> Открыть PDF файл статьи</a>
+                                            {% else %}
+                                                <strong>PDF:</strong> Нет PDF файла статьи
+                                            {% endif %}
+
+                                            <br>
+
+                                            {% if ref.resolved_article %}
+                                                <strong>Статус в БД:</strong> Связана со статьей <a href="{% url 'article_detail' ref.resolved_article.pk %}">"{{ ref.resolved_article.title|truncatechars:50 }}"</a>
+                                            {% else %}
+                                                <strong>Статус в БД:</strong> Не связана с локальной статьей
+                                            {% endif %}
+                                        </p>
+
+                                        <span class="status">Статус обработки ссылки: {{ ref.get_status_display }}</span>
+
+                                        <div class="actions">
+                                            {% if not ref.target_article_doi and ref.status != "doi_lookup_in_progress" %}
+                                                {# Не показывать кнопку, если уже в поиске #}
+                                                <button onclick="findDoiForReference({{ ref.id }}, this)">Найти DOI</button>
+                                            {% elif ref.status == "doi_lookup_in_progress" %}
+                                                <button disabled>Поиск DOI...</button>
+                                            {% else %}
+                                                <button disabled title="DOI уже найден или указан">Найти DOI</button>
+                                            {% endif %}
+
+                                            {% if ref.target_article_doi and not ref.resolved_article and ref.status != "article_fetch_in_progress" %}
+                                                <button onclick="loadReferencedArticle({{ ref.id }}, this)">Загрузить по DOI</button>
+                                            {% elif ref.status == "article_fetch_in_progress" %}
+                                                <button disabled>Загрузка статьи...</button>
+                                            {% else %}
+                                                <button disabled title="Нет DOI или статья уже загружена/связана">Загрузить по DOI</button>
+                                            {% endif %}
+
+                                            <button onclick="openEditModal({{ ref.id }}, '{{ ref.raw_reference_text|escapejs }}', '{{ ref.target_article_doi|default_if_none:""|escapejs }}', '{{ ref.manual_data_json.title|default_if_none:""|escapejs }}', '{{ ref.manual_data_json.year|default_if_none:""|escapejs }}', '{{ ref.status|escapejs }}', '{{ ref.get_status_display|escapejs }}')">Редактировать</button>
+
+                                            <button onclick="deleteReference({{ ref.id }}, this)" style="background-color: #d9534f; color:white;">Удалить</button>
+                                        </div>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                            </div>
+                    {% endif %}
+                </div>
+
+            </div>
+
+            
+
+            
+
+            
+
+            {% comment %} {% if article.abstract %}
+            <div class="detail-section abstract">
+                <h3>Аннотация</h3>
+                <p>{{ article.abstract|linebreaksbr }}</p>
+            </div>
+            {% endif %} {% endcomment %}
+
+            {% comment %} {% if article.structured_content %}
+                <div class="detail-section structured-text">
+                    <h3>Структурированное содержимое статьи</h3>
+                    {% if article.structured_content.title %}
+                        <h4>{{ article.structured_content.title }}</h4>
+                    {% endif %}
+
+                    {% if article.structured_content.abstract %}
+                        <div class="content-section">
+                            <h5>Abstract (Аннотация)</h5>
+                            <p>{{ article.structured_content.abstract|linebreaksbr }}</p>
+                        </div>
+                    {% endif %}
+
+                    {% if article.structured_content.introduction %}
+                        <div class="content-section">
+                            <h5>Introduction (Введение)</h5>
+                            <p>{{ article.structured_content.introduction|linebreaksbr }}</p>
+                        </div>
+                    {% endif %}
+
+                    {% if article.structured_content.methods %}
+                        <div class="content-section">
+                            <h5>Methods (Методы)</h5>
+                            <p>{{ article.structured_content.methods|linebreaksbr }}</p>
+                        </div>
+                    {% endif %}
+
+                    {% if article.structured_content.results %}
+                        <div class="content-section">
+                            <h5>Results (Результаты)</h5>
+                            <p>{{ article.structured_content.results|linebreaksbr }}</p>
+                        </div>
+                    {% endif %}
+
+                    {% if article.structured_content.discussion %}
+                        <div class="content-section">
+                            <h5>Discussion (Обсуждение)</h5>
+                            <p>{{ article.structured_content.discussion|linebreaksbr }}</p>
+                        </div>
+                    {% endif %}
+
+                    {% if article.structured_content.other_sections %}
+                        {% for sec in article.structured_content.other_sections %}
+                            <div class="content-section">
+                                <h5>{{ sec.title|default:"Дополнительная секция" }}</h5>
+                                <p>{{ sec.text|linebreaksbr }}</p>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    {% if article.structured_content.conclusion %}
+                        <div class="content-section">
+                            <h5>Conclusion (Заключение)</h5>
+                            <p>{{ article.structured_content.conclusion|linebreaksbr }}</p>
+                        </div>
+                    {% endif %}
+
+                    {% if not article.structured_content.introduction and not article.structured_content.methods and article.structured_content.full_body_fallback %}
+                        <div class="content-section">
+                            <h5>Основной текст (без разделов)</h5>
+                            <p>{{ article.structured_content.full_body_fallback|linebreaksbr }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %} {% endcomment %}
+
+            
+
+
+
+            
+
+            
+        </div>
+    </div>
 </div>
 
 {# *** МОДАЛЬНОЕ ОКНО ДЛЯ ДОБАВЛЕНИЯ ССЫЛКИ *** #}
-<div id="addReferenceModal" style="display:none; position:fixed; z-index:1050; left:0; top:0; width:100%; height:100%; overflow:auto; background-color:rgba(0,0,0,0.4);">
-    <div style="background-color:#fefefe; margin:10% auto; padding:20px; border:1px solid #888; width:60%; max-width:600px; border-radius:5px;">
-        <span onclick="closeAddReferenceModal()" style="color:#aaa; float:right; font-size:28px; font-weight:bold; cursor:pointer;">&times;</span>
-        <h3>Добавить новую ссылку</h3>
-
+<div id="addReferenceModal" style="display:none; position:fixed; flex-direction: column; z-index:1050; left:0; top:0; width:100%; height:100%; overflow:auto; background-color:rgba(0,0,0,0.4);">
+    <div style="background-color:#fefefe; margin:auto; padding:20px; border:1px solid #888; width:60%; max-width:600px; border-radius:5px;">
+        <!-- <span onclick="closeAddReferenceModal()" style="color:#aaa; float:right; font-size:28px; font-weight:bold; cursor:pointer;">&times;</span> -->
+        <div style="display: flex; gap: 10px; align-items: center;margin-bottom: 10px;">
+            <h3 style="flex:1; margin: 0px;">Добавить новую ссылку</h3>
+            <button onclick="closeAddReferenceModal()" type="button" class="modal-toggle-button" isnotchangabletext="">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6.4 19L5 17.6L10.6 12L5 6.4L6.4 5L12 10.6L17.6 5L19 6.4L13.4 12L19 17.6L17.6 19L12 13.4L6.4 19Z" fill="black"></path>
+                </svg>
+            </button>
+            
+        </div>
         <form id="addReferenceForm">
             <p>
                 <label for="addRefTargetDoi">Целевой DOI (если известен):</label>
@@ -792,8 +832,8 @@
 </div>
 
 {# === МОДАЛЬНОЕ ОКНО ДЛЯ СОЗДАНИЯ НОВОГО АНАЛИЗИРУЕМОГО СЕГМЕНТА === #}
-<div id="segmentCreationModal" style="display:none; position:fixed; z-index:1060; left:0; top:0; width:100%; height:100%; overflow:auto; background-color:rgba(0,0,0,0.5);">
-    <div style="background-color:#fefefe; margin:5% auto; padding:20px; border:1px solid #888; width:70%; max-width:700px; border-radius:5px;">
+<div id="segmentCreationModal" style="display:none; flex-direction: column; position:fixed; z-index:1060; left:0; top:0; width:100%; height:100%; overflow:auto; background-color:rgba(0,0,0,0.5);">
+    <div style="background-color:#fefefe; margin:auto; padding:20px; border:1px solid #888; width:70%; max-width:700px; border-radius:5px;">
         <span onclick="closeSegmentCreationModal()" style="color:#aaa; float:right; font-size:28px; font-weight:bold; cursor:pointer;">&times;</span>
         <h3>Создать новый анализируемый сегмент</h3>
 
@@ -828,10 +868,16 @@
 </div>
 
 {# *** МОДАЛЬНОЕ ОКНО ДЛЯ ДОБАВЛЕНИЯ НОВОЙ СЕКЦИИ *** #}
-<div id="addSectionModal" style="display:none; position:fixed; z-index:1050; left:0; top:0; width:100%; height:100%; overflow:auto; background-color:rgba(0,0,0,0.4);">
-    <div style="background-color:#fefefe; margin:10% auto; padding:20px; border:1px solid #888; width:60%; max-width:600px; border-radius:5px;">
-        <span onclick="closeAddSectionModal()" style="color:#aaa; float:right; font-size:28px; font-weight:bold; cursor:pointer;">&times;</span>
-        <h3>Добавить новую секцию</h3>
+<div id="addSectionModal" style="display:none; position:fixed; flex-direction: column; z-index:1050; left:0; top:0; width:100%; height:100%; overflow:auto; background-color:rgba(0,0,0,0.4);">
+    <div style="background-color:#fefefe; margin:auto; padding:20px; border:1px solid #888; width:60%; max-width:600px; border-radius:5px;">
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <h3 style="flex: 1;">Добавить новую секцию</h3>
+            <button onclick="closeAddSectionModal()" type="button" class="modal-toggle-button" isnotchangabletext="">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6.4 19L5 17.6L10.6 12L5 6.4L6.4 5L12 10.6L17.6 5L19 6.4L13.4 12L19 17.6L17.6 19L12 13.4L6.4 19Z" fill="black"></path>
+                </svg>
+            </button>
+        </div>
 
         <form id="addSectionForm">
             <p>
@@ -851,11 +897,17 @@
     </div>
 </div>
 
-<div id="editReferenceModal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; overflow:auto; background-color:rgba(0,0,0,0.4);">
-    <div style="background-color:#fefefe; margin:10% auto; padding:20px; border:1px solid #888; width:60%; max-width:600px; border-radius:5px;">
-        <span onclick="closeEditModal()" style="color:#aaa; float:right; font-size:28px; font-weight:bold; cursor:pointer;">&times;</span>
+<div id="editReferenceModal" style="display:none; position:fixed; flex-direction: column; z-index:1000; left:0; top:0; width:100%; height:100%; overflow:auto; background-color:rgba(0,0,0,0.4);">
+    <div style="background-color:#fefefe; margin:auto; padding:20px; border:1px solid #888; width:60%; max-width:600px; border-radius:5px;">
 
-        <h3>Редактировать ссылку</h3>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <h3 style="flex:1 ; margin: 0;">Редактировать ссылку</h3>
+            <button onclick="closeEditModal()" type="button" class="modal-toggle-button" isnotchangabletext="">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6.4 19L5 17.6L10.6 12L5 6.4L6.4 5L12 10.6L17.6 5L19 6.4L13.4 12L19 17.6L17.6 19L12 13.4L6.4 19Z" fill="black"></path>
+                </svg>
+            </button>
+        </div>
 
         <form id="editReferenceForm">
             <input type="hidden" id="editRefId" name="id">
@@ -935,6 +987,10 @@ const addSectionForm = document.getElementById('addSectionForm');
 const newSectionTitleInput = document.getElementById('newSectionTitle');
 const newSectionTextInput = document.getElementById('newSectionText');
 
+function closeAddSectionModal() {
+    if (addSectionModal) addSectionModal.style.display = 'none';
+}
+
 // --- JavaScript для модального окна добавления новой ССЫЛКИ ---
 const addReferenceModal = document.getElementById('addReferenceModal');
 const addReferenceForm = document.getElementById('addReferenceForm');
@@ -990,7 +1046,7 @@ if (createSegmentBtn) {
             segmentSectionKeyInput.value = sectionKeyGuess;
 
             populateReferencesChecklist();
-            segmentCreationModal.style.display = 'block';
+            segmentCreationModal.style.display = 'flex';
         }
         this.style.display = 'none'; // Скрываем кнопку после открытия модала
     });
@@ -1365,7 +1421,7 @@ function openEditModal(refId, rawText, targetDoi, manualTitle, manualYear, curre
     editRefStatusSelect.value = currentStatus || '';
     currentRefStatusDisplaySpan.textContent = currentStatusDisplay || 'N/A';
 
-    editModal.style.display = 'block';
+    editModal.style.display = 'flex';
 }
 
 
@@ -1702,13 +1758,10 @@ document.addEventListener('DOMContentLoaded', function() {
     function openAddSectionModal() {
         if (newSectionTitleInput) newSectionTitleInput.value = '';
         if (newSectionTextInput) newSectionTextInput.value = '';
-        if (addSectionModal) addSectionModal.style.display = 'block';
+        if (addSectionModal) addSectionModal.style.display = 'flex';
         if (newSectionTitleInput) newSectionTitleInput.focus();
     }
 
-    function closeAddSectionModal() {
-        if (addSectionModal) addSectionModal.style.display = 'none';
-    }
 
     // Слушатель для кнопки открытия модального окна
     const openModalButton = document.getElementById('openAddSectionModalBtn');
@@ -1932,7 +1985,7 @@ document.querySelectorAll('.llm-analyze-segment-btn').forEach(button => {
 
 function openAddReferenceModal() {
     if(addReferenceForm) addReferenceForm.reset(); // Очищаем форму
-    if(addReferenceModal) addReferenceModal.style.display = 'block';
+    if(addReferenceModal) addReferenceModal.style.display = 'flex';
 }
 
 
