@@ -556,23 +556,25 @@ flex-direction: column;
             <button class="profile-button" title="{{ user.username }}"> {{ user.username|slice:":1"  }}</button>
             <a class="primary-button" href="{% url 'logout' %}">{% trans 'Выйти' %}</a>
             {% else %}
-            <a href="{% url 'login' %}">{% trans 'Войти' %}</a>
+            <a class="primary-button" href="{% url 'login' %}">{% trans 'Войти' %}</a>
             {% endif %}
           </div>
           </div>
         </div>
       </div>
     </header>
-    <div class="header-row-full-width sticky">
-          <div class="header-row">
-            <nav class="header-nav">
-              {% if user.is_authenticated %}
-              <a targetName="articles" href="{% url 'article_list' %}">{% trans 'Мои статьи' %}</a>
-              <a targetName="add_article" href="{% url 'submit_article' %}">{% trans 'Добавить статью' %}</a>
-              {% endif %}
-            </nav>
-          </div>
+    {% if user.is_authenticated %}
+      <div class="header-row-full-width sticky">
+        <div class="header-row">
+          <nav class="header-nav">
+            
+            <a targetName="articles" href="{% url 'article_list' %}">{% trans 'Мои статьи' %}</a>
+            <a targetName="add_article" href="{% url 'submit_article' %}">{% trans 'Добавить статью' %}</a>
+            
+          </nav>
         </div>
+      </div>
+    {% endif %}
     <div class="page">
       {% if messages %}
       <ul class="messages">
