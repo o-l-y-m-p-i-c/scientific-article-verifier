@@ -17,6 +17,11 @@
         flex-direction: column;
     }
 
+    .login-form h2{
+        margin: 0;
+        margin-bottom: 20px;
+    }
+
     .login-form form {
         display: flex;
         flex-direction: column;
@@ -25,6 +30,8 @@
 
     .login-form form input {
          width: 100%;
+         margin: 0;
+         margin-top: 5px;
     }
 
 </style>
@@ -32,10 +39,6 @@
 <div class="container">
     <div class="login-form">
         <h2 style="text-align: center;">{% trans 'Вход в систему' %}</h2>
-
-        {% if form.errors %}
-            <p style="color:red; margin-top: 0px;">{% trans 'Ваше имя пользователя и пароль не совпали. Пожалуйста, попробуйте еще раз.' %}</p>
-        {% endif %}
 
         <form method="post" action="{% url 'login' %}">
             {% csrf_token %}
@@ -48,6 +51,10 @@
                 {{ form.password.label_tag }}
                 {{ form.password }}
             </div>
+
+            {% if form.errors %}
+                <p style="color:red; margin: 5px 0; text-align: center;">{% trans 'Ваше имя пользователя и пароль не совпали. Пожалуйста, попробуйте еще раз.' %}</p>
+            {% endif %}
 
             <button type="submit">{% trans 'Войти' %}</button>
 
