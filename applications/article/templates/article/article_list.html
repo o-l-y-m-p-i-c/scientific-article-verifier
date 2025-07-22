@@ -33,6 +33,10 @@ border-top: 0;
     gap: 10px;
   }
 
+  .primary-article-action-buttons *{
+    white-space: nowrap;
+  }
+
   .linked-articles-container-head{
     display: flex;
     justify-content: space-between;
@@ -174,13 +178,13 @@ border-top: 0;
                 {% trans 'Cвязанные статьи' %} ({{ item_data.linked_articles|length }})
                 </button>
                 <div id="linked-articles-{{ item_data.primary_article.pk }}" class="linked-articles-container">
-                    <div class="linked-articles-container-outer">
+                    <div class="linked-articles-container-outer linked-articles-toggle" isNotChangableText data-target="linked-articles-{{ item_data.primary_article.pk }}">
                         <div class="linked-articles-container-inner">
 
                             <div class="linked-articles-container-head">
                                 <h4>{% trans 'Связанные статьи:' %}</h4>
-                                <button type="button" class="linked-articles-toggle dialog-toggle" isNotChangableText data-target="linked-articles-{{ item_data.primary_article.pk }}">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <button type="button" class="linked-articles-toggle dialog-toggle"  isNotChangableText data-target="linked-articles-{{ item_data.primary_article.pk }}">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="pointer-events: none;"> 
                                         <path d="M6.4 19L5 17.6L10.6 12L5 6.4L6.4 5L12 10.6L17.6 5L19 6.4L13.4 12L19 17.6L17.6 19L12 13.4L6.4 19Z" fill="black"/>
                                     </svg>
                                 </button>
@@ -225,7 +229,15 @@ border-top: 0;
     const toggleButtons = document.querySelectorAll(".linked-articles-toggle");
 
     toggleButtons.forEach(function (button) {
-      button.addEventListener("click", function () {
+      button.addEventListener("click", function (e) {
+
+        const target = e.target
+        const currentTarget = e.currentTarget
+
+        if(target !== currentTarget){
+          return
+        }
+
         const targetId = this.getAttribute("data-target");
         const isNotChangableText = this.getAttribute("isNotChangableText");
         const targetContainer = document.getElementById(targetId);

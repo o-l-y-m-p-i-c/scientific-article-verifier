@@ -355,6 +355,11 @@ flex-direction: column;
         gap: 10px;
       }
 
+      .header-right-side .primary-button{
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+
       .header-row-full-width{
         background: var(--header-bg-color);
         border-bottom: 1px solid #ddd;
@@ -432,14 +437,17 @@ flex-direction: column;
         justify-content: center;
         align-items: center;
         border-radius: 100%;
-        background: var(--profile-button-bg-color);
-        color:var(--profile-button-text-color);
+        background-color: transparent;
+        border: 1px solid var(--primary-color);
+        color:var(--primary-color);
+        /* background: var(--profile-button-bg-color); */
+        /* color:var(--profile-button-text-color); */
         text-decoration: none;
         font-size: 14px;
         letter-spacing: 0.5px;
         cursor:default;
         text-transform: uppercase;
-        border: none;
+        /* border: none; */
       }
 
       nav a.current {
@@ -582,6 +590,10 @@ flex-direction: column;
 
     <script> 
 
+      const LocalStorageKeys = {
+        notifications: 'notificationsShow'
+      }
+
       const navLinks = document.querySelectorAll('.header-nav a')
       const pathname =  window.location.pathname
 
@@ -657,7 +669,18 @@ flex-direction: column;
 
       function notificationToggle() {
         notificationContainer.classList.toggle('show')
+
+        const containsShowClass = notificationContainer.classList.contains('show')
+
+        localStorage.setItem(LocalStorageKeys.notifications, containsShowClass)
       }
+
+      const onLoadNotificationLocalStorageData = localStorage.getItem(LocalStorageKeys.notifications)
+
+      if(onLoadNotificationLocalStorageData === 'true'){
+        notificationToggle()
+      }
+
 
       
       notificationButtons.forEach(notificationButton => {
@@ -667,10 +690,7 @@ flex-direction: column;
         }
         
       })
-
-
-
-
+      
   </script>
   </body>
 

@@ -524,12 +524,14 @@
                                         {{ other_sec.text|default:"(Текст отсутствует)"|linebreaksbr }}
                                     </div>
                                     {# TODO: Здесь можно будет добавить и кнопку "Редактировать" для этих секций позже #}
-                                    <button type="button" class="delete-custom-section-btn"
-                                            data-section-index="{{ forloop.counter0 }}"
-                                            data-section-title="{{ other_sec.title|default_if_none:''|escapejs }}"
-                                            style="background-color:#d9534f; color:white; font-size:0.8em; padding:3px 6px; margin-top:10px;">
-                                        Удалить эту секцию
-                                    </button>
+                                    <div class="actions">
+                                        <button type="button" class="delete-custom-section-btn cancel-button"
+                                                data-section-index="{{ forloop.counter0 }}"
+                                                data-section-title="{{ other_sec.title|default_if_none:''|escapejs }}"
+>
+                                            Удалить эту секцию
+                                        </button>
+                                    </div>
                                 </div>
                             {% endfor %}
                             </div>
